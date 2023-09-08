@@ -1,0 +1,11 @@
+.cut-post {
+  width: 200%;
+  max-width: 200%;
+  margin-left: -100%;
+  position: absolute;
+  z-index: 0;
+}
+
+.star-parent:hover .star {
+  color: white;
+}
