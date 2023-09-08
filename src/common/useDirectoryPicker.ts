@@ -4,24 +4,36 @@ import { useState, GroupType, FunctionType } from "./useState";
 type UnwrapPromise<T> = T extends Promise<infer U> ? U : T;
 type HandleType = UnwrapPromise<ReturnType<typeof showDirectoryPicker>>;
 type PickerReturnType = {
-  videos: FileSystemHandle[];
+  videos: FileSystemFileHandle[];
   showPicker: () => Promise<void>;
+  isLoading: boolean;
   group: GroupType[];
 } & Pick<FunctionType, "filter" | "search">;
 
 export const useDirectoryPicker = (): PickerReturnType => {
-  const { videos, group, setGroup, setVideos, filter, search } = useState();
-  const files: FileSystemHandle[] = [];
+  const {
+    videos,
+    group,
+    setGroup,
+    setVideos,
+    filter,
+    search,
+    isLoading,
+    setLoading,
+  } = useState();
+  const files: FileSystemFileHandle[] = [];
   const showPicker = async () => {
     try {
+      setLoading(true);
       const handle = await showDirectoryPicker();
       await processHandle(handle);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
-    const _files = files.slice(0, 300);
-    setVideos(_files);
-    setGroup(getGroupWithCount(_files));
+    setVideos(files);
+    setGroup(getGroupWithCount(files));
   };
 
   const processHandle = async (handle: HandleType) => {
@@ -41,5 +53,6 @@ export const useDirectoryPicker = (): PickerReturnType => {
     group,
     filter,
     search,
+    isLoading,
   };
 };

@@ -5,3 +5,7 @@
   position: absolute;
   z-index: 0;
 }
+
+.star-parent:hover .star {
+  color: white;
+}

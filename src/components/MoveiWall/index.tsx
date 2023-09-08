@@ -1,10 +1,11 @@
-import { useState, filterVideos } from "../common/useState";
+import { useState, filterVideos } from "../../common/useState";
 import MoviePost from "../MoviePost";
+import RecentBar from "../RecentBar";
+import StarBar from "../StarBar";
 import { useRef } from "react";
 
 function MovieWall() {
-  const { videos, search, filter, playList, group, query, groupKey } =
-    useState();
+  const { videos, search, filter, group, query, groupKey } = useState();
   const inputRef: React.RefObject<HTMLInputElement> = useRef(null);
 
   const onSearch = () => {
@@ -38,11 +39,12 @@ function MovieWall() {
           重置
         </button>
       </div>
-      <div className="px-4 text-white">
-        query:{query}, groupKey: {groupKey}
+      <StarBar />
+      <RecentBar />
+      <div className="p-4 text-white">
+        {groupKey === "all" ? "全部作品" : `${groupKey}系列`}
       </div>
-      {playList.length > 0 && <div>{playList.length}</div>}
-      <div className="flex flex-row flex-wrap gap-4 p-4 overflow-y-auto">
+      <div className="flex flex-row flex-wrap gap-4 px-4 overflow-y-auto pb-96">
         {filterVideos(videos, group, groupKey, query).map((video) => (
           <MoviePost key={video.name} video={video} />
         ))}
