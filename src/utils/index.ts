@@ -1,10 +1,14 @@
 import { LRUCache } from "./LRUCache";
-
+import { saveImage } from "@/common/useDirectoryPicker";
 export * from "./LRUCache";
+
 const localStarsKey = "AV-MASTER-STARS";
 const localRecentKey = "AV-MASTER-RECENT";
 
 export const fileNameRe = /([A-Za-z]+)-\d+/;
+
+export const formatName = (name: string) =>
+  name.replace("._", "").replace("_uncensored", "").split(".")[0] || name;
 
 export const groupFile = (files: FileSystemFileHandle[]) => {
   const result: { [key: string]: FileSystemFileHandle[] } = {};
@@ -90,4 +94,25 @@ export const setLocalStorage = (key: string, value: object | string) => {
     _value = value;
   }
   localStorage.setItem(key, _value);
+};
+
+export const getPost = async (
+  code: string
+): Promise<{ code: string; url: string }> => {
+  const response = await fetch(`http://localhost:3000/av/${formatName(code)}`);
+  const data = await response.json();
+  if (data.url) {
+    await downloadImage(code, data.url);
+  }
+  return data;
+};
+
+export const downloadImage = async (code: string, url: string) => {
+  const response = await fetch(`http://localhost:3000/cover?url=${url}`);
+  const ImageName = `${code}.jpg`;
+  const data = await response.blob();
+  console.log(data);
+  if (data.size > 0) {
+    await saveImage(ImageName, data);
+  }
 };

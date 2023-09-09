@@ -1,4 +1,6 @@
 import { useState, filterVideos } from "../../common/useState";
+import { localCovers } from "@/common/useDirectoryPicker";
+import { formatName, getPost } from "@/utils";
 import MoviePost from "../MoviePost";
 import RecentBar from "../RecentBar";
 import StarBar from "../StarBar";
@@ -22,6 +24,19 @@ function MovieWall() {
     }
   };
 
+  const getVideoPost = async () => {
+    for (const video of videos) {
+      const name = formatName(video.name);
+      if (!localCovers.has(name)) {
+        console.log(`正在处理${name}封面`);
+        await getPost(name);
+      } else {
+        console.log(`${name}已有封面`);
+      }
+    }
+    onReset();
+  };
+
   return (
     <div className="flex flex-col flex-1 max-h-screen overflow-hidden">
       <div className="flex items-center flex-shrink-0 h-16 px-4 shadow-xl bg-slate-700">
@@ -37,6 +52,12 @@ function MovieWall() {
           className="h-8 px-4 ml-2 transition-all bg-orange-400 rounded-md hover:bg-orange-500 text-neutral-800"
         >
           重置
+        </button>
+        <button
+          onClick={getVideoPost}
+          className="h-8 px-4 ml-2 transition-all bg-green-400 rounded-md hover:bg-green-500 text-neutral-700"
+        >
+          获取封面
         </button>
       </div>
       <StarBar />
