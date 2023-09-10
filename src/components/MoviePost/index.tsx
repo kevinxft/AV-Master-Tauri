@@ -3,6 +3,7 @@ import { localCovers } from "@/common/useDirectoryPicker";
 import { useEffect, useRef } from "react";
 import { formatName, getPost } from "@/utils";
 import StarButton from "@/components/StarButton";
+import AddButton from "@/components/AddButton";
 import "./index.css";
 
 function MoviePost({
@@ -12,21 +13,25 @@ function MoviePost({
   video: FileSystemFileHandle;
   mini?: boolean;
 }) {
-  const { removePlayList, addPlayList, playList, stars } = useState();
+  const {
+    removePlayList,
+    addPlayList,
+    playList,
+    stars,
+    isFullCover,
+    setFullCover,
+  } = useState();
 
-  const isInclude = () => playList.some((v) => v.videoName === video.name);
+  const isInPlayList = playList.some((v) => v.fileName === video.name);
   const _video = useRef<VideoType>();
   const imgRef = useRef<HTMLImageElement>(null);
 
   const onAddPlay = async () => {
-    if (isInclude()) {
-      return;
-    }
     const url = await video.getFile();
     if (!_video.current) {
       _video.current = {
-        videoName: video.name,
         name: formatName(video.name),
+        fileName: video.name,
         url: URL.createObjectURL(url),
       };
     }
@@ -37,22 +42,34 @@ function MoviePost({
     removePlayList(video.name);
   };
 
-  const refreshCover = async () => {
-    const res = await getPost(formatName(video.name));
-    if (imgRef.current) {
-      imgRef.current.src = res.url;
+  const onAddClick = async () => {
+    console.log(isInPlayList);
+    if (isInPlayList) {
+      await onRemove();
+      return;
     }
+    await onAddPlay();
+  };
+
+  const refreshCover = async () => {
+    // const res = await getPost(formatName(video.name));
+    // if (imgRef.current) {
+    //   imgRef.current.src = res.url;
+    // }
   };
 
   useEffect(() => {
     async function setCover() {
       if (imgRef.current) {
-        const name = formatName(video.name);
-        const cover: FileSystemFileHandle | string = localCovers.get(name);
+        const name = video.name;
+        const cover: FileSystemFileHandle | string = localCovers.get(
+          formatName(name)
+        );
         if (!cover) {
           return;
         }
         if (typeof cover === "string") {
+          imgRef.current.src = cover;
           return;
         }
         const file = await cover.getFile();
@@ -66,45 +83,35 @@ function MoviePost({
 
   return (
     <div
-      className={`relative flex flex-col overflow-hidden rounded-lg shadow-2xl bg-slate-500 ${
-        mini ? "w-24 h-36" : "w-40 h-60"
-      }`}
+      className={`relative flex flex-col transition-all ease-in-out overflow-hidden rounded-lg w-full cover-ratio bg-slate-500 ${
+        video.name.includes("uncensored") && "ring-4 ring-pink-500"
+      } ${isFullCover ? "full-cover" : "font-cover"}`}
     >
-      <img className="cut-post" ref={imgRef} />
+      <img
+        className={`${isFullCover ? "full-post" : "clip-post"}`}
+        ref={imgRef}
+      />
       <div
-        className={`relative z-10 py-1 px-1  text-white cursor-pointer z-1 bg-black/50 star-parent ${
-          mini ? "text-xs text-left" : "text-sm text-center"
+        className={`absolute inset-0 flex flex-col cursor-pointer ${
+          !isInPlayList && "mask"
         }`}
       >
-        <span onClick={refreshCover}>{formatName(video.name)}</span>
-        <div
-          className={`absolute text-xl transition-all cursor-pointer star top-1 right-1 ${
-            stars.includes(video.name) ? "text-white" : "text-transparent"
-          } ${mini ? "text-xs" : ""}`}
-        >
-          <StarButton videoName={video.name} />
+        <div className="absolute inset-0 flex flex-col inner">
+          <div
+            className={`relative z-10 py-1 px-1 cursor-pointer z-1 text-white bg-black/50 star-parent ${
+              mini ? "text-xs text-left" : "text-sm text-center"
+            }`}
+          >
+            <span onClick={refreshCover}>{formatName(video.name)}</span>
+          </div>
+          <div className="flex h-10 mt-auto text-white bg-black/50">
+            <div className="flex items-center gap-2 ml-auto text-3xl">
+              <AddButton isInPlayList={isInPlayList} onClick={onAddClick} />
+              <StarButton videoName={video.name} />
+            </div>
+          </div>
         </div>
       </div>
-
-      {isInclude() ? (
-        <button
-          onClick={onRemove}
-          className={`mt-auto text-center text-white transition-all bg-red-500/60 hover:bg-red-500 ${
-            mini ? "text-xs" : ""
-          }`}
-        >
-          移除
-        </button>
-      ) : (
-        <button
-          onClick={onAddPlay}
-          className={`mt-auto text-center text-white transition-all bg-blue-500/60 hover:bg-blue-500 ${
-            mini ? "text-xs" : ""
-          }`}
-        >
-          加入列表
-        </button>
-      )}
     </div>
   );
 }

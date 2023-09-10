@@ -13,7 +13,7 @@ function Player({
   const { removePlayList } = useState();
 
   const onRemove = () => {
-    removePlayList(video.videoName);
+    removePlayList(video.fileName);
   };
 
   useEffect(() => {
@@ -22,15 +22,20 @@ function Player({
     }
   }, [register, videoRef]);
   return (
-    <div className="relative">
+    <div className="relative aspect-video">
       <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-center p-2 text-transparent transition-all hover:bg-slate-300/40 hover:text-white">
         {video.name}
-        <StarButton videoName={video.videoName} />
+        <StarButton videoName={video.fileName} />
         <button className="p-1 ml-auto" onClick={onRemove}>
           移除
         </button>
       </div>
-      <video ref={videoRef} src={video.url} controls></video>
+      <video
+        className="object-contain w-full h-full"
+        ref={videoRef}
+        src={video.url}
+        controls
+      ></video>
     </div>
   );
 }

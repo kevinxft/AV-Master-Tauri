@@ -12,7 +12,7 @@ type PlayerGridType = {
 function PlayerGrid(props: PlayerGridType) {
   const { playList } = useState();
   return (
-    <>
+    <div className="flex flex-col">
       <div
         className="flex gap-2 p-2 rounded-md bg-slate-900"
         onClick={(e) => e.stopPropagation()}
@@ -42,8 +42,18 @@ function PlayerGrid(props: PlayerGridType) {
           全部从头播放
         </button>
       </div>
-      <div className="grid grid-cols-3">{props.children}</div>
-    </>
+      <div
+        className={`grid h-[90vh] ${
+          playList.length === 1
+            ? "grid-cols-1"
+            : playList.length >= 2 && playList.length < 5
+            ? "grid-cols-2"
+            : "grid-cols-3"
+        }`}
+      >
+        {props.children}
+      </div>
+    </div>
   );
 }
 

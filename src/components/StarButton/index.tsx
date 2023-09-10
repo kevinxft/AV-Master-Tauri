@@ -1,4 +1,4 @@
-import { AiOutlineStar, AiFillStar } from "react-icons/ai";
+import { AiOutlineHeart, AiFillHeart } from "react-icons/ai";
 import { useState } from "@/common/useState";
 
 function StarButton({ videoName }: { videoName: string }) {
@@ -6,9 +6,13 @@ function StarButton({ videoName }: { videoName: string }) {
   const onStar = () => {
     setStar(videoName);
   };
+  const isStared = stars.includes(videoName);
   return (
-    <div className="cursor-pointer" onClick={onStar}>
-      {stars.includes(videoName) ? <AiFillStar /> : <AiOutlineStar />}
+    <div
+      className={`cursor-pointer ${isStared && "text-red-400"}`}
+      onClick={onStar}
+    >
+      {isStared ? <AiFillHeart /> : <AiOutlineHeart />}
     </div>
   );
 }

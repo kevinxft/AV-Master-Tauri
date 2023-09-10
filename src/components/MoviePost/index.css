@@ -1,11 +1,36 @@
-.cut-post {
-  width: 200%;
-  max-width: 200%;
-  margin-left: -100%;
+.clip-post {
+  max-width: 215%;
+  height: 100%;
+  object-fit: cover;
   position: absolute;
+  right: 0;
   z-index: 0;
+}
+
+.full-post {
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  right: 0;
+  z-index: 0;
+}
+
+.full-cover {
+  aspect-ratio: 4 / 2.7;
+}
+
+.font-cover {
+  aspect-ratio: 1 / 1.42;
 }
 
 .star-parent:hover .star {
   color: white;
+}
+
+.mask .inner {
+  opacity: 0;
+}
+
+.mask:hover .inner {
+  opacity: 1;
 }

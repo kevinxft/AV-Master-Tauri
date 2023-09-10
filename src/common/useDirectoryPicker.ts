@@ -1,4 +1,5 @@
 import { formatName, getGroupWithCount } from "../utils";
+import { _ALL_KEY } from "./constants";
 import { useState, GroupType, FunctionType } from "./useState";
 
 const AV_MASTER_CONFIG_DIR = "__AV_MASTER_CONFIG__";
@@ -6,17 +7,58 @@ const AV_MASTER_COVERS_DIR = "__AV_MASTER_COVERS__";
 const AV_MASTER_USER_DATA = "__AV_MASTER_USER_DATA__.json";
 
 export const localCovers = new Map();
+export const dirs = new Map();
+const files: FilesType = [];
 
+type FilesType = FileSystemFileHandle[];
 type UnwrapPromise<T> = T extends Promise<infer U> ? U : T;
 type HandleType = UnwrapPromise<ReturnType<typeof showDirectoryPicker>>;
 type PickerReturnType = {
   videos: FileSystemFileHandle[];
-  showPicker: () => Promise<void>;
+  showPicker: (startIn?: FileSystemDirectoryHandle) => Promise<void>;
   isLoading: boolean;
   group: GroupType[];
 } & Pick<FunctionType, "filter" | "search">;
 
-let handle: FileSystemDirectoryHandle;
+let rootHandle: FileSystemDirectoryHandle;
+
+const processCovers = async (handle: HandleType) => {
+  const iter = await handle.entries();
+  for await (const entry of iter) {
+    if (entry[1].kind === "file") {
+      localCovers.set(formatName(entry[1].name), entry[1]);
+    }
+  }
+};
+
+const processDirs = (file: FileSystemFileHandle, dir: string) => {
+  if (dirs.has(dir)) {
+    dirs.get(dir).push(file);
+  } else {
+    dirs.set(dir, [file]);
+  }
+};
+
+const processHandle = async (handle: HandleType, currentDir?: string) => {
+  const iter = await handle.entries();
+  for await (const entry of iter) {
+    const cur = entry[1];
+    if (cur.kind === "directory") {
+      if (cur.name === AV_MASTER_COVERS_DIR) {
+        await processCovers(cur);
+      } else {
+        await processHandle(cur, cur.name);
+      }
+    } else {
+      if (cur.name !== AV_MASTER_USER_DATA) {
+        files.push(cur);
+        if (currentDir) {
+          processDirs(cur, currentDir);
+        }
+      }
+    }
+  }
+};
 
 export const useDirectoryPicker = (): PickerReturnType => {
   const {
@@ -24,18 +66,29 @@ export const useDirectoryPicker = (): PickerReturnType => {
     group,
     setGroup,
     setVideos,
+    setDirs,
     filter,
     search,
     isLoading,
     setLoading,
   } = useState();
-  const files: FileSystemFileHandle[] = [];
-  const showPicker = async () => {
+  const showPicker = async (startIn?: FileSystemDirectoryHandle) => {
     try {
       setLoading(true);
-      handle = await showDirectoryPicker();
-      await processHandle(handle);
-      await initConfig(handle);
+      if (startIn) {
+        console.log("startIn", startIn);
+        const iter = await startIn.entries();
+        const first: FileSystemHandle = (await iter.next()).value();
+        rootHandle = await showDirectoryPicker({
+          ...{ startIn: first },
+        });
+      } else {
+        rootHandle = await showDirectoryPicker({ mode: "readwrite" });
+      }
+      const file = await rootHandle.getDirectoryHandle(AV_MASTER_CONFIG_DIR);
+      console.log("rootHanlde", file);
+      await processHandle(rootHandle);
+      await initConfig(rootHandle);
     } catch (err) {
       console.error(err);
     } finally {
@@ -43,32 +96,7 @@ export const useDirectoryPicker = (): PickerReturnType => {
     }
     setVideos(files);
     setGroup(getGroupWithCount(files));
-  };
-
-  const processCovers = async (handle: HandleType) => {
-    const iter = await handle.entries();
-    for await (const entry of iter) {
-      if (entry[1].kind === "file") {
-        localCovers.set(formatName(entry[1].name), entry[1]);
-      }
-    }
-  };
-
-  const processHandle = async (handle: HandleType) => {
-    const iter = await handle.entries();
-    for await (const entry of iter) {
-      if (entry[1].kind === "directory") {
-        if (entry[1].name === AV_MASTER_COVERS_DIR) {
-          await processCovers(entry[1]);
-        } else {
-          await processHandle(entry[1]);
-        }
-      } else {
-        if (entry[1].name !== AV_MASTER_USER_DATA) {
-          files.push(entry[1]);
-        }
-      }
-    }
+    setDirs([_ALL_KEY, ...Array.from(dirs.keys())]);
   };
 
   return {
@@ -139,14 +167,14 @@ const initConfig = async (handle: FileSystemDirectoryHandle) => {
 };
 
 const initCoversDir = async () => {
-  const configDirHandle = await getDirHandle(handle, AV_MASTER_CONFIG_DIR);
+  const configDirHandle = await getDirHandle(rootHandle, AV_MASTER_CONFIG_DIR);
   if (configDirHandle) {
     createFolder(configDirHandle, AV_MASTER_COVERS_DIR);
   }
 };
 
 const initUserData = async () => {
-  const configDirHandle = await getDirHandle(handle, AV_MASTER_CONFIG_DIR);
+  const configDirHandle = await getDirHandle(rootHandle, AV_MASTER_CONFIG_DIR);
   if (configDirHandle) {
     if (!(await getFileHandle(configDirHandle, AV_MASTER_USER_DATA))) {
       await writeFile(configDirHandle, AV_MASTER_USER_DATA, "");
@@ -156,7 +184,10 @@ const initUserData = async () => {
 
 const getCoversDirHandle = async () => {
   try {
-    const configDirHandle = await getDirHandle(handle, AV_MASTER_CONFIG_DIR);
+    const configDirHandle = await getDirHandle(
+      rootHandle,
+      AV_MASTER_CONFIG_DIR
+    );
     if (configDirHandle) {
       return await getDirHandle(configDirHandle, AV_MASTER_COVERS_DIR);
     }
@@ -176,5 +207,11 @@ export const saveImage = async (ImageName: string, data: Blob) => {
     }
   } catch (error) {
     console.error("保存图片失败", error);
+  }
+};
+
+export const refresDirs = () => {
+  if (rootHandle) {
+    console.log(rootHandle);
   }
 };
