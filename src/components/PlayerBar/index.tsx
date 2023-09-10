@@ -40,7 +40,7 @@ function PlayerBar() {
   return (
     <>
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center w-screen h-16 gap-4 text-white bg-blue-400 shadow-md max-w-96 transition-all ${
+        className={`fixed bottom-2 left-0 right-0 mx-auto rounded-lg w-fit z-50 flex items-center justify-center px-4  h-16 gap-4 text-white bg-neutral-900 shadow-md max-w-96 transition-all ${
           playList.length > 0 && !modalVisible
             ? "translate-y-0"
             : "translate-y-full"
@@ -48,9 +48,9 @@ function PlayerBar() {
       >
         {playList.map((video) => (
           <div
-            key={video.videoName}
-            onClick={() => onRemove(video.videoName)}
-            className="p-2 border-2 rounded-lg cursor-pointer "
+            key={video.fileName}
+            onClick={() => onRemove(video.fileName)}
+            className="p-2 text-sm underline rounded-lg cursor-pointer"
           >
             {video.name}
           </div>

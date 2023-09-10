@@ -1,10 +1,21 @@
 import { LRUCache } from "./LRUCache";
-
+import { localCovers, saveImage } from "@/common/useDirectoryPicker";
 export * from "./LRUCache";
+import { _ALL_KEY } from "@/common/constants";
+
+// const baseURL = "http://192.168.2.105:7771";
+const baseURL = "http://192.168.2.8:7771";
 const localStarsKey = "AV-MASTER-STARS";
 const localRecentKey = "AV-MASTER-RECENT";
+const localRecentPathKey = "AV-MASTER-RECENT-Path";
 
 export const fileNameRe = /([A-Za-z]+)-\d+/;
+
+export const formatName = (name: string) =>
+  name
+    .replace("._", "")
+    .replace(/-_uncensored|_uncensored/, "")
+    .replace(/\..*$/, "") || name;
 
 export const groupFile = (files: FileSystemFileHandle[]) => {
   const result: { [key: string]: FileSystemFileHandle[] } = {};
@@ -34,10 +45,22 @@ export const getGroupWithCount = (files: FileSystemFileHandle[]) => {
   return [
     {
       name: `全部 (${files.length})`,
-      key: "all",
+      key: _ALL_KEY,
     },
     ...list,
   ];
+};
+
+export const setRecentPath = (path: string) => {
+  const paths = getLocalArr(localRecentPathKey);
+  if (paths.includes(path)) {
+    return;
+  }
+  setLocalArr(localRecentPathKey, [path, ...paths]);
+};
+
+export const getRecnetPaths = () => {
+  return getLocalArr(localRecentPathKey);
 };
 
 export const setRecent = (arr: string[]) => {
@@ -90,4 +113,26 @@ export const setLocalStorage = (key: string, value: object | string) => {
     _value = value;
   }
   localStorage.setItem(key, _value);
+};
+
+export const getPost = async (
+  code: string
+): Promise<{ code: string; url: string }> => {
+  const _code = formatName(code);
+  const response = await fetch(`${baseURL}/av/${_code}`);
+  const data = await response.json();
+  if (data.url) {
+    localCovers.set(_code, data.url);
+    await downloadImage(code, data.url);
+  }
+  return data;
+};
+
+export const downloadImage = async (code: string, url: string) => {
+  const response = await fetch(`${baseURL}/cover?url=${url}`);
+  const ImageName = `${code}.jpg`;
+  const data = await response.blob();
+  if (data.size > 0) {
+    await saveImage(ImageName, data);
+  }
 };
