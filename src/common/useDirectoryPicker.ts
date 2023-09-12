@@ -1,4 +1,4 @@
-import { formatName, getGroupWithCount } from "../utils";
+import { formatName, getGroupWithCount, setStars } from "../utils";
 import { _ALL_KEY } from "./constants";
 import { useState, GroupType, FunctionType } from "./useState";
 
@@ -6,7 +6,6 @@ const AV_MASTER_CONFIG_DIR = "__AV_MASTER_CONFIG__";
 const AV_MASTER_COVERS_DIR = "__AV_MASTER_COVERS__";
 const AV_MASTER_USER_DATA = "__AV_MASTER_USER_DATA__.json";
 
-export const localCovers = new Map();
 export const dirs = new Map();
 const files: FilesType = [];
 
@@ -18,47 +17,11 @@ type PickerReturnType = {
   showPicker: (startIn?: FileSystemDirectoryHandle) => Promise<void>;
   isLoading: boolean;
   group: GroupType[];
+  refreshCovers: () => void;
 } & Pick<FunctionType, "filter" | "search">;
 
 let rootHandle: FileSystemDirectoryHandle;
-
-const processCovers = async (handle: HandleType) => {
-  const iter = await handle.entries();
-  for await (const entry of iter) {
-    if (entry[1].kind === "file") {
-      localCovers.set(formatName(entry[1].name), entry[1]);
-    }
-  }
-};
-
-const processDirs = (file: FileSystemFileHandle, dir: string) => {
-  if (dirs.has(dir)) {
-    dirs.get(dir).push(file);
-  } else {
-    dirs.set(dir, [file]);
-  }
-};
-
-const processHandle = async (handle: HandleType, currentDir?: string) => {
-  const iter = await handle.entries();
-  for await (const entry of iter) {
-    const cur = entry[1];
-    if (cur.kind === "directory") {
-      if (cur.name === AV_MASTER_COVERS_DIR) {
-        await processCovers(cur);
-      } else {
-        await processHandle(cur, cur.name);
-      }
-    } else {
-      if (cur.name !== AV_MASTER_USER_DATA) {
-        files.push(cur);
-        if (currentDir) {
-          processDirs(cur, currentDir);
-        }
-      }
-    }
-  }
-};
+let coversHanlde: FileSystemDirectoryHandle;
 
 export const useDirectoryPicker = (): PickerReturnType => {
   const {
@@ -71,7 +34,57 @@ export const useDirectoryPicker = (): PickerReturnType => {
     search,
     isLoading,
     setLoading,
+    setCovers,
   } = useState();
+
+  const processDirs = (file: FileSystemFileHandle, dir: string) => {
+    if (dirs.has(dir)) {
+      dirs.get(dir).push(file);
+    } else {
+      dirs.set(dir, [file]);
+    }
+  };
+
+  const processCovers = async (handle: HandleType) => {
+    const iter = await handle.entries();
+    const covers = new Map<string, string>();
+    for await (const entry of iter) {
+      if (entry[1].kind === "file") {
+        const url = await toUrl(entry[1]);
+        covers.set(formatName(entry[1].name), url);
+      }
+    }
+    setCovers(covers);
+  };
+
+  const refreshCovers = async () => {
+    if (coversHanlde) {
+      await processCovers(coversHanlde);
+    }
+  };
+
+  const processHandle = async (handle: HandleType, currentDir?: string) => {
+    const iter = await handle.entries();
+    for await (const entry of iter) {
+      const cur = entry[1];
+      if (cur.kind === "directory") {
+        if (cur.name === AV_MASTER_COVERS_DIR) {
+          coversHanlde = cur;
+          await processCovers(cur);
+        } else {
+          await processHandle(cur, cur.name);
+        }
+      } else {
+        if (cur.name !== AV_MASTER_USER_DATA) {
+          files.push(cur);
+          if (currentDir) {
+            processDirs(cur, currentDir);
+          }
+        }
+      }
+    }
+  };
+
   const showPicker = async (startIn?: FileSystemDirectoryHandle) => {
     try {
       setLoading(true);
@@ -85,10 +98,8 @@ export const useDirectoryPicker = (): PickerReturnType => {
       } else {
         rootHandle = await showDirectoryPicker({ mode: "readwrite" });
       }
-      const file = await rootHandle.getDirectoryHandle(AV_MASTER_CONFIG_DIR);
-      console.log("rootHanlde", file);
-      await processHandle(rootHandle);
       await initConfig(rootHandle);
+      await processHandle(rootHandle);
     } catch (err) {
       console.error(err);
     } finally {
@@ -96,7 +107,26 @@ export const useDirectoryPicker = (): PickerReturnType => {
     }
     setVideos(files);
     setGroup(getGroupWithCount(files));
-    setDirs([_ALL_KEY, ...Array.from(dirs.keys())]);
+    const dirNames = Array.from(dirs.keys());
+    let sortedDirs = dirNames.sort((a: string, b: string) =>
+      a.localeCompare(b, undefined, { sensitivity: "base" })
+    );
+
+    sortedDirs = sortedDirs.map((name) => {
+      return {
+        name,
+        count: dirs.get(name).length,
+        key: name,
+      };
+    });
+    setDirs([
+      {
+        name: "全部",
+        key: _ALL_KEY,
+        count: files.length,
+      },
+      ...sortedDirs,
+    ]);
   };
 
   return {
@@ -106,6 +136,7 @@ export const useDirectoryPicker = (): PickerReturnType => {
     filter,
     search,
     isLoading,
+    refreshCovers,
   };
 };
 
@@ -198,15 +229,21 @@ const getCoversDirHandle = async () => {
   }
 };
 
-export const saveImage = async (ImageName: string, data: Blob) => {
+export const saveImage = async (
+  ImageName: string,
+  data: Blob
+): Promise<boolean> => {
   const coversDirHandle = await getCoversDirHandle();
   try {
     const file = new File([data], ImageName, { type: "image/jpeg" });
     if (coversDirHandle) {
       await writeFile(coversDirHandle, ImageName, file);
+      return true;
     }
+    return false;
   } catch (error) {
     console.error("保存图片失败", error);
+    return false;
   }
 };
 
@@ -214,4 +251,10 @@ export const refresDirs = () => {
   if (rootHandle) {
     console.log(rootHandle);
   }
+};
+
+const toUrl = async (handle: FileSystemFileHandle) => {
+  const file = await handle.getFile();
+  const cover = URL.createObjectURL(file);
+  return cover;
 };

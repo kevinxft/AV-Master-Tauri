@@ -16,9 +16,10 @@ export type FunctionType = {
   setModal: (modalVisible: boolean) => void;
   setStar: (vidoeName: string) => void;
   setRecent: (clear?: boolean) => void;
-  setDirs: (dirs: string[]) => void;
+  setDirs: (dirs: dirType[]) => void;
   setDirName: (dirName: string) => void;
   setFullCover: (isFullCover: boolean) => void;
+  setCovers: (covers: Map<string, string>) => void;
 };
 
 export type GroupType = {
@@ -33,10 +34,16 @@ export type VideoType = {
   url: string;
 };
 
+export type dirType = {
+  name: string;
+  count: number;
+  key: string;
+};
+
 export type ValueType = {
   videos: FileSystemFileHandle[];
   group: GroupType[];
-  dirs: string[];
+  dirs: dirType[];
   query: string;
   groupKey: string;
   dirName: string;
@@ -47,6 +54,7 @@ export type ValueType = {
   isFullCover: boolean;
   stars: string[];
   recent: string[];
+  covers: Map<string, string>;
 };
 
 export const initState = {
@@ -54,6 +62,7 @@ export const initState = {
   group: [],
   dirs: [],
   query: "",
+  covers: new Map(),
   groupKey: _ALL_KEY,
   dirName: _ALL_KEY,
   stars: getStars(),
@@ -116,6 +125,7 @@ export const useState = create<StateType>((set) => ({
     }),
   setDirName: (dirName) => set({ dirName }),
   setFullCover: (isFullCover) => set({ isFullCover }),
+  setCovers: (covers) => set({ covers }),
 }));
 
 export const filterVideos = (
@@ -127,11 +137,11 @@ export const filterVideos = (
   dirs: Map<string, FileSystemFileHandle[]>,
   dirName: string
 ) => {
-  if (isAuto) {
-    return filterByAuto(videos, group, groupKey, query);
-  } else {
-    return filterByDir(videos, dirs, dirName, query);
-  }
+  const result = isAuto
+    ? filterByAuto(videos, group, groupKey, query)
+    : filterByDir(videos, dirs, dirName, query);
+
+  return result;
 };
 
 const filterByDir = (
@@ -148,7 +158,9 @@ const filterByDir = (
     result = dirs.get(dirName) || [];
   }
   if (search) {
-    return result.filter((video) => video.name.toLowerCase().includes(search));
+    result = result.filter((video) =>
+      video.name.toLowerCase().includes(search)
+    );
   }
   return result;
 };
@@ -167,7 +179,9 @@ const filterByAuto = (
     result = group.find((item) => item.key === groupKey)?.files || [];
   }
   if (search) {
-    return result.filter((video) => video.name.toLowerCase().includes(search));
+    result = result.filter((video) =>
+      video.name.toLowerCase().includes(search)
+    );
   }
   return result;
 };

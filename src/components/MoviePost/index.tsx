@@ -1,9 +1,10 @@
 import { useState, VideoType } from "../../common/useState";
-import { localCovers } from "@/common/useDirectoryPicker";
 import { useEffect, useRef } from "react";
 import { formatName, getPost } from "@/utils";
 import StarButton from "@/components/StarButton";
 import AddButton from "@/components/AddButton";
+import { useDirectoryPicker } from "@/common/useDirectoryPicker";
+import { FiRefreshCw } from "react-icons/fi";
 import "./index.css";
 
 function MoviePost({
@@ -13,14 +14,9 @@ function MoviePost({
   video: FileSystemFileHandle;
   mini?: boolean;
 }) {
-  const {
-    removePlayList,
-    addPlayList,
-    playList,
-    stars,
-    isFullCover,
-    setFullCover,
-  } = useState();
+  const { removePlayList, addPlayList, playList, covers, isFullCover } =
+    useState();
+  const { refreshCovers } = useDirectoryPicker();
 
   const isInPlayList = playList.some((v) => v.fileName === video.name);
   const _video = useRef<VideoType>();
@@ -51,35 +47,25 @@ function MoviePost({
     await onAddPlay();
   };
 
-  const refreshCover = async () => {
-    // const res = await getPost(formatName(video.name));
-    // if (imgRef.current) {
-    //   imgRef.current.src = res.url;
-    // }
+  const onRefreshCover = async () => {
+    const isSuccess = await getPost(formatName(video.name));
+    if (isSuccess) {
+      refreshCovers();
+    }
   };
 
   useEffect(() => {
     async function setCover() {
       if (imgRef.current) {
-        const name = video.name;
-        const cover: FileSystemFileHandle | string = localCovers.get(
-          formatName(name)
-        );
-        if (!cover) {
+        const url = covers.get(formatName(video.name));
+        if (!url) {
           return;
         }
-        if (typeof cover === "string") {
-          imgRef.current.src = cover;
-          return;
-        }
-        const file = await cover.getFile();
-        const url = URL.createObjectURL(file);
         imgRef.current.src = url;
-        localCovers.set(name, url);
       }
     }
     setCover();
-  }, [imgRef, video]);
+  }, [imgRef, video, covers]);
 
   return (
     <div
@@ -88,9 +74,10 @@ function MoviePost({
       } ${isFullCover ? "full-cover" : "font-cover"}`}
     >
       <img
-        className={`${isFullCover ? "full-post" : "clip-post"}`}
         ref={imgRef}
+        className={`${isFullCover ? "full-post" : "clip-post"}`}
       />
+
       <div
         className={`absolute inset-0 flex flex-col cursor-pointer ${
           !isInPlayList && "mask"
@@ -102,9 +89,12 @@ function MoviePost({
               mini ? "text-xs text-left" : "text-sm text-center"
             }`}
           >
-            <span onClick={refreshCover}>{formatName(video.name)}</span>
+            <span onClick={onRefreshCover}>{formatName(video.name)}</span>
           </div>
-          <div className="flex h-10 mt-auto text-white bg-black/50">
+          <div className="flex items-center h-10 mt-auto text-white bg-black/50">
+            <div className="ml-2 hover:rotate-180" onClick={onRefreshCover}>
+              <FiRefreshCw />
+            </div>
             <div className="flex items-center gap-2 ml-auto text-3xl">
               <AddButton isInPlayList={isInPlayList} onClick={onAddClick} />
               <StarButton videoName={video.name} />
