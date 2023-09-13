@@ -14,8 +14,15 @@ function MoviePost({
   video: FileSystemFileHandle;
   mini?: boolean;
 }) {
-  const { removePlayList, addPlayList, playList, covers, isFullCover } =
-    useState();
+  const {
+    removePlayList,
+    addPlayList,
+    playList,
+    covers,
+    isFullCover,
+    refreshTag,
+    updateRefreshTag,
+  } = useState();
   const { refreshCovers } = useDirectoryPicker();
 
   const isInPlayList = playList.some((v) => v.fileName === video.name);
@@ -50,7 +57,8 @@ function MoviePost({
   const onRefreshCover = async () => {
     const isSuccess = await getPost(formatName(video.name));
     if (isSuccess) {
-      refreshCovers();
+      await refreshCovers();
+      updateRefreshTag();
     }
   };
 
@@ -58,14 +66,13 @@ function MoviePost({
     async function setCover() {
       if (imgRef.current) {
         const url = covers.get(formatName(video.name));
-        if (!url) {
-          return;
+        if (url) {
+          imgRef.current.src = url;
         }
-        imgRef.current.src = url;
       }
     }
     setCover();
-  }, [imgRef, video, covers]);
+  }, [imgRef, video, covers, refreshTag]);
 
   return (
     <div

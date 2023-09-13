@@ -7,6 +7,7 @@ const AV_MASTER_COVERS_DIR = "__AV_MASTER_COVERS__";
 const AV_MASTER_USER_DATA = "__AV_MASTER_USER_DATA__.json";
 
 export const dirs = new Map();
+const _covers = new Map();
 const files: FilesType = [];
 
 type FilesType = FileSystemFileHandle[];
@@ -47,14 +48,15 @@ export const useDirectoryPicker = (): PickerReturnType => {
 
   const processCovers = async (handle: HandleType) => {
     const iter = await handle.entries();
-    const covers = new Map<string, string>();
     for await (const entry of iter) {
-      if (entry[1].kind === "file") {
-        const url = await toUrl(entry[1]);
-        covers.set(formatName(entry[1].name), url);
+      const file = entry[1];
+      const fileName = formatName(file.name);
+      if (file.kind === "file" && !_covers.has(fileName)) {
+        const url = await toUrl(file);
+        _covers.set(fileName, url);
       }
     }
-    setCovers(covers);
+    setCovers(_covers);
   };
 
   const refreshCovers = async () => {
@@ -68,7 +70,7 @@ export const useDirectoryPicker = (): PickerReturnType => {
     for await (const entry of iter) {
       const cur = entry[1];
       if (cur.kind === "directory") {
-        if (cur.name === AV_MASTER_COVERS_DIR) {
+        if (cur.name === AV_MASTER_COVERS_DIR && !coversHanlde) {
           coversHanlde = cur;
           await processCovers(cur);
         } else {

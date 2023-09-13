@@ -4,7 +4,7 @@ export * from "./LRUCache";
 import { _ALL_KEY } from "@/common/constants";
 
 // const baseURL = "http://192.168.2.105:7771";
-const baseURL = "http://192.168.2.8:7771";
+const baseURL = "http://192.168.2.8:7777";
 const localStarsKey = "AV-MASTER-STARS";
 const localRecentKey = "AV-MASTER-RECENT";
 const localRecentPathKey = "AV-MASTER-RECENT-Path";

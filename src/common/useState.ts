@@ -20,6 +20,7 @@ export type FunctionType = {
   setDirName: (dirName: string) => void;
   setFullCover: (isFullCover: boolean) => void;
   setCovers: (covers: Map<string, string>) => void;
+  updateRefreshTag: () => void;
 };
 
 export type GroupType = {
@@ -55,6 +56,7 @@ export type ValueType = {
   stars: string[];
   recent: string[];
   covers: Map<string, string>;
+  refreshTag: number;
 };
 
 export const initState = {
@@ -72,6 +74,7 @@ export const initState = {
   isLoading: false,
   modalVisible: false,
   isFullCover: false,
+  refreshTag: 0,
 };
 
 export type StateType = ValueType & FunctionType;
@@ -126,6 +129,8 @@ export const useState = create<StateType>((set) => ({
   setDirName: (dirName) => set({ dirName }),
   setFullCover: (isFullCover) => set({ isFullCover }),
   setCovers: (covers) => set({ covers }),
+  updateRefreshTag: () =>
+    set((state) => ({ refreshTag: state.refreshTag + 1 })),
 }));
 
 export const filterVideos = (
