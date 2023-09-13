@@ -1,10 +1,10 @@
 import { LRUCache } from "./LRUCache";
-import { localCovers, saveImage } from "@/common/useDirectoryPicker";
+import { saveImage } from "@/common/useDirectoryPicker";
 export * from "./LRUCache";
 import { _ALL_KEY } from "@/common/constants";
 
 // const baseURL = "http://192.168.2.105:7771";
-const baseURL = "http://192.168.2.8:7771";
+const baseURL = "http://192.168.2.8:7777";
 const localStarsKey = "AV-MASTER-STARS";
 const localRecentKey = "AV-MASTER-RECENT";
 const localRecentPathKey = "AV-MASTER-RECENT-Path";
@@ -115,24 +115,22 @@ export const setLocalStorage = (key: string, value: object | string) => {
   localStorage.setItem(key, _value);
 };
 
-export const getPost = async (
-  code: string
-): Promise<{ code: string; url: string }> => {
+export const getPost = async (code: string): Promise<boolean> => {
   const _code = formatName(code);
   const response = await fetch(`${baseURL}/av/${_code}`);
   const data = await response.json();
   if (data.url) {
-    localCovers.set(_code, data.url);
-    await downloadImage(code, data.url);
+    return await downloadImage(code, data.url);
   }
-  return data;
+  return false;
 };
 
 export const downloadImage = async (code: string, url: string) => {
   const response = await fetch(`${baseURL}/cover?url=${url}`);
   const ImageName = `${code}.jpg`;
   const data = await response.blob();
-  if (data.size > 0) {
-    await saveImage(ImageName, data);
+  if (data.size === 0) {
+    return false;
   }
+  return await saveImage(ImageName, data);
 };

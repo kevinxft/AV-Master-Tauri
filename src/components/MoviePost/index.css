@@ -34,3 +34,9 @@
 .mask:hover .inner {
   opacity: 1;
 }
+
+@keyframes rotate {
+  to {
+    transform: 360deg;
+  }
+}

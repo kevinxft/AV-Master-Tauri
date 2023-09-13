@@ -1,6 +1,5 @@
 import { useState, filterVideos } from "../../common/useState";
-import { localCovers, dirs, refresDirs } from "@/common/useDirectoryPicker";
-import { formatName, getPost } from "@/utils";
+import { dirs } from "@/common/useDirectoryPicker";
 import MoviePost from "../MoviePost";
 import { useRef } from "react";
 import { _ALL_KEY } from "@/common/constants";
@@ -30,19 +29,6 @@ function MovieWall() {
     if (inputRef.current) {
       inputRef.current.value = "";
     }
-  };
-
-  const getVideoPost = async () => {
-    for (const video of videos) {
-      const name = formatName(video.name);
-      if (!localCovers.has(name)) {
-        console.log(`正在处理${name}封面`);
-        await getPost(name);
-      } else {
-        console.log(`${name}已有封面`);
-      }
-    }
-    onReset();
   };
 
   return (
