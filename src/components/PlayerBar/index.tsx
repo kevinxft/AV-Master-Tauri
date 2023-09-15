@@ -5,14 +5,19 @@ import PlayerGrid from "../PlayerGrid";
 import Player from "../Player";
 
 function PlayerBar() {
-  const { playList, removePlayList, modalVisible, setModal, setRecent } =
-    useState();
+  const {
+    playList,
+    removePlayList,
+    modalVisible,
+    setModal,
+    setRecent,
+    isFullScreen,
+  } = useState();
   const onRemove = (videoName: string) => removePlayList(videoName);
 
   const videoRefs = useRef<RefObject<HTMLVideoElement>[]>([]);
 
   const onRegister = (ref: RefObject<HTMLVideoElement>) => {
-    console.log("register");
     videoRefs.current.push(ref);
   };
 
@@ -36,6 +41,8 @@ function PlayerBar() {
   };
 
   const onReplayAll = () => {};
+
+  const lastVideo = playList[playList.length - 1];
 
   return (
     <>
@@ -69,9 +76,17 @@ function PlayerBar() {
           onPlay={onPlayAll}
           onReplay={onReplayAll}
         >
-          {playList.map((video) => (
-            <Player key={video.name} video={video} register={onRegister} />
-          ))}
+          {!isFullScreen ? (
+            <Player
+              key={lastVideo.name}
+              video={lastVideo}
+              register={onRegister}
+            />
+          ) : (
+            playList.map((video) => (
+              <Player key={video.name} video={video} register={onRegister} />
+            ))
+          )}
         </PlayerGrid>
       </Modal>
     </>
