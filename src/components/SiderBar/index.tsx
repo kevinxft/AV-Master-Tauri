@@ -21,7 +21,7 @@ function SiderBar() {
     //   ))}
     // </div>
     <>
-      <div className="flex flex-col max-h-screen overflow-y-auto text-orange-100 border-r contes border-r-orange-100 w-52 pb-28 min-w-max">
+      <div className="flex flex-col max-h-screen overflow-y-auto text-orange-100 border-r select-none contes border-r-orange-100 w-52 pb-28 min-w-max">
         <button
           className="py-2"
           onClick={() => {

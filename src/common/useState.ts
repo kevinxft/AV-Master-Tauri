@@ -21,6 +21,7 @@ export type FunctionType = {
   setFullCover: (isFullCover: boolean) => void;
   setCovers: (covers: Map<string, string>) => void;
   updateRefreshTag: () => void;
+  setFullScreen: (isFullScreen: boolean) => void;
 };
 
 export type GroupType = {
@@ -57,6 +58,7 @@ export type ValueType = {
   recent: string[];
   covers: Map<string, string>;
   refreshTag: number;
+  isFullScreen: boolean;
 };
 
 export const initState = {
@@ -74,6 +76,7 @@ export const initState = {
   isLoading: false,
   modalVisible: false,
   isFullCover: false,
+  isFullScreen: false,
   refreshTag: 0,
 };
 
@@ -131,6 +134,7 @@ export const useState = create<StateType>((set) => ({
   setCovers: (covers) => set({ covers }),
   updateRefreshTag: () =>
     set((state) => ({ refreshTag: state.refreshTag + 1 })),
+  setFullScreen: (isFullScreen) => set({ isFullScreen }),
 }));
 
 export const filterVideos = (

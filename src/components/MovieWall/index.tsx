@@ -32,7 +32,7 @@ function MovieWall() {
   };
 
   return (
-    <div className="flex flex-col flex-1 max-h-screen overflow-hidden">
+    <div className="flex flex-col flex-1 max-h-screen overflow-hidden select-none">
       <div className="p-4 text-white">
         {dirName === _ALL_KEY ? "全部作品" : dirName}
       </div>

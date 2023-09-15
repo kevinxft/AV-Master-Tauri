@@ -46,7 +46,6 @@ function MoviePost({
   };
 
   const onAddClick = async () => {
-    console.log(isInPlayList);
     if (isInPlayList) {
       await onRemove();
       return;
@@ -92,7 +91,7 @@ function MoviePost({
       >
         <div className="absolute inset-0 flex flex-col inner">
           <div
-            className={`relative z-10 py-1 px-1 cursor-pointer z-1 text-white bg-black/50 star-parent ${
+            className={`relative py-1 px-1 cursor-pointer text-white bg-black/50 star-parent ${
               mini ? "text-xs text-left" : "text-sm text-center"
             }`}
           >
