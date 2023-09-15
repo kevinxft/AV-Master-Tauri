@@ -1,35 +1,35 @@
 import { useState, filterVideos } from "../../common/useState";
 import { dirs } from "@/common/useDirectoryPicker";
 import MoviePost from "../MoviePost";
-import { useRef } from "react";
+// import { useRef } from "react";
 import { _ALL_KEY } from "@/common/constants";
 
 function MovieWall() {
   const {
     videos,
-    search,
-    filter,
+    // search,
+    // filter,
     group,
     query,
     groupKey,
     dirName,
     isFullCover,
   } = useState();
-  const inputRef: React.RefObject<HTMLInputElement> = useRef(null);
+  // const inputRef: React.RefObject<HTMLInputElement> = useRef(null);
 
-  const onSearch = () => {
-    if (inputRef.current) {
-      search(inputRef.current.value);
-    }
-  };
+  // const onSearch = () => {
+  //   if (inputRef.current) {
+  //     search(inputRef.current.value);
+  //   }
+  // };
 
-  const onReset = () => {
-    search("");
-    filter(_ALL_KEY);
-    if (inputRef.current) {
-      inputRef.current.value = "";
-    }
-  };
+  // const onReset = () => {
+  //   search("");
+  //   filter(_ALL_KEY);
+  //   if (inputRef.current) {
+  //     inputRef.current.value = "";
+  //   }
+  // };
 
   return (
     <div className="flex flex-col flex-1 max-h-screen overflow-hidden select-none">

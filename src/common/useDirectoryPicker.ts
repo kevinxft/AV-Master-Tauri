@@ -1,4 +1,4 @@
-import { formatName, getGroupWithCount, setStars } from "../utils";
+import { formatName, getGroupWithCount } from "../utils";
 import { _ALL_KEY } from "./constants";
 import { useState, GroupType, FunctionType } from "./useState";
 

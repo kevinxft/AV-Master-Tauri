@@ -76,17 +76,17 @@ function PlayerBar() {
           onPlay={onPlayAll}
           onReplay={onReplayAll}
         >
-          {!isFullScreen ? (
-            <Player
-              key={lastVideo.name}
-              video={lastVideo}
-              register={onRegister}
-            />
-          ) : (
-            playList.map((video) => (
-              <Player key={video.name} video={video} register={onRegister} />
-            ))
-          )}
+          {!isFullScreen
+            ? lastVideo && (
+                <Player
+                  key={lastVideo.name}
+                  video={lastVideo}
+                  register={onRegister}
+                />
+              )
+            : playList.map((video) => (
+                <Player key={video.name} video={video} register={onRegister} />
+              ))}
         </PlayerGrid>
       </Modal>
     </>
