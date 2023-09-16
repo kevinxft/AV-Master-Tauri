@@ -1,6 +1,32 @@
 import { useDirectoryPicker } from "@/common/useDirectoryPicker";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/common/db";
+import { readDir } from "@tauri-apps/api/fs";
+import type { FileEntry } from "@tauri-apps/api/fs";
+import { open } from "@tauri-apps/api/dialog";
+// Reads the `$APPDATA/users` directory recursively
+
+const openDir = async () => {
+  const dirPath = await open({
+    directory: true,
+    multiple: false,
+  });
+  if (dirPath) {
+    const entries = await readDir(dirPath as string, {
+      recursive: true,
+    });
+    console.log(entries);
+    processEntries(entries);
+  }
+
+  function processEntries(entries: FileEntry[]) {
+    for (const entry of entries) {
+      if (entry.children) {
+        processEntries(entry.children);
+      }
+    }
+  }
+};
 
 function WelcomePanel() {
   const { showPicker } = useDirectoryPicker();
@@ -18,7 +44,7 @@ function WelcomePanel() {
         </div>
       ))}
       <button
-        onClick={() => showPicker()}
+        onClick={() => openDir()}
         className="p-4 m-auto text-white transition-all rounded-xl bg-cyan-600 hover:bg-cyan-600/90"
       >
         打开文件夹
