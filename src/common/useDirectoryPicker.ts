@@ -1,10 +1,11 @@
 import { formatName, getGroupWithCount } from "../utils";
 import { _ALL_KEY } from "./constants";
 import { useState, GroupType, FunctionType } from "./useState";
-
-const AV_MASTER_CONFIG_DIR = "__AV_MASTER_CONFIG__";
-const AV_MASTER_COVERS_DIR = "__AV_MASTER_COVERS__";
-const AV_MASTER_USER_DATA = "__AV_MASTER_USER_DATA__.json";
+import {
+  AV_MASTER_CONFIG_DIR,
+  AV_MASTER_COVERS_DIR,
+  AV_MASTER_USER_DATA,
+} from "./constants";
 
 export const dirs = new Map();
 const _covers = new Map();

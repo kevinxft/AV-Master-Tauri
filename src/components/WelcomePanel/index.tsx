@@ -1,32 +1,7 @@
 import { useDirectoryPicker } from "@/common/useDirectoryPicker";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/common/db";
-import { readDir } from "@tauri-apps/api/fs";
-import type { FileEntry } from "@tauri-apps/api/fs";
-import { open } from "@tauri-apps/api/dialog";
-// Reads the `$APPDATA/users` directory recursively
-
-const openDir = async () => {
-  const dirPath = await open({
-    directory: true,
-    multiple: false,
-  });
-  if (dirPath) {
-    const entries = await readDir(dirPath as string, {
-      recursive: true,
-    });
-    console.log(entries);
-    processEntries(entries);
-  }
-
-  function processEntries(entries: FileEntry[]) {
-    for (const entry of entries) {
-      if (entry.children) {
-        processEntries(entry.children);
-      }
-    }
-  }
-};
+import { openDir } from "@/common/useFs";
 
 function WelcomePanel() {
   const { showPicker } = useDirectoryPicker();
