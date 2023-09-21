@@ -1,10 +1,9 @@
-import { useDirectoryPicker } from "@/common/useDirectoryPicker";
 import { useLiveQuery } from "dexie-react-hooks";
+import { useDirectoryPicker } from "@/common/useFs";
 import { db } from "@/common/db";
-import { openDir } from "@/common/useFs";
 
 function WelcomePanel() {
-  const { showPicker } = useDirectoryPicker();
+  const { openDir } = useDirectoryPicker();
   const directories = useLiveQuery(() => db.directories.toArray());
   return (
     <div className="flex flex-col items-center justify-center w-64 h-64 m-auto bg-cyan-500 rounded-3xl">
@@ -12,7 +11,6 @@ function WelcomePanel() {
       {directories?.map((dir) => (
         <div
           className="p-4 bg-red-300 rounded-md cursor-pointer"
-          onClick={() => showPicker(dir.handle)}
           key={dir.name}
         >
           {dir.name}

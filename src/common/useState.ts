@@ -5,7 +5,7 @@ import { _ALL_KEY } from "@/common/constants";
 const LRU = new LRUCache(12);
 
 export type FunctionType = {
-  setVideos: (videos: FileSystemFileHandle[]) => void;
+  setVideos: (videos: VideoType[]) => void;
   setGroup: (group: GroupType[]) => void;
   search: (query: string) => void;
   filter: (groupKey: string) => void;
@@ -31,9 +31,10 @@ export type GroupType = {
 };
 
 export type VideoType = {
-  fileName: string;
+  path: string;
+  formatName: string;
   name: string;
-  url: string;
+  url?: string;
 };
 
 export type dirType = {
@@ -43,7 +44,7 @@ export type dirType = {
 };
 
 export type ValueType = {
-  videos: FileSystemFileHandle[];
+  videos: VideoType[];
   group: GroupType[];
   dirs: dirType[];
   query: string;
@@ -90,14 +91,14 @@ export const useState = create<StateType>((set) => ({
   reset: (initState) => set(() => ({ ...initState })),
   addPlayList: (video) =>
     set((state) => {
-      if (state.playList.some((v) => v.fileName === video.fileName)) {
+      if (state.playList.some((v) => v.name === video.name)) {
         return {};
       }
       return { playList: [...state.playList, video] };
     }),
   removePlayList: (fileName) =>
     set((state) => ({
-      playList: state.playList.filter((item) => item.fileName !== fileName),
+      playList: state.playList.filter((item) => item.name !== fileName),
     })),
   setLoading: (isLoading) => set({ isLoading }),
   setModal: (modalVisible) => set({ modalVisible }),
@@ -119,7 +120,7 @@ export const useState = create<StateType>((set) => ({
         return { recent: [] };
       }
       state.playList.forEach((v) => {
-        LRU.set(v.fileName, v.name);
+        LRU.set(v.name, v.name);
       });
       const recent: string[] = LRU.toArray();
       setRecent(recent);

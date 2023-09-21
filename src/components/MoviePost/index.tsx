@@ -5,13 +5,15 @@ import StarButton from "@/components/StarButton";
 import AddButton from "@/components/AddButton";
 import { useDirectoryPicker } from "@/common/useDirectoryPicker";
 import { FiRefreshCw } from "react-icons/fi";
+import { readBinaryFile } from "@tauri-apps/api/fs";
+import { convertFileSrc } from "@tauri-apps/api/tauri";
 import "./index.css";
 
 function MoviePost({
   video,
   mini = false,
 }: {
-  video: FileSystemFileHandle;
+  video: VideoType;
   mini?: boolean;
 }) {
   const {
@@ -25,19 +27,26 @@ function MoviePost({
   } = useState();
   const { refreshCovers } = useDirectoryPicker();
 
-  const isInPlayList = playList.some((v) => v.fileName === video.name);
+  const isInPlayList = playList.some((v) => v.name === video.name);
   const _video = useRef<VideoType>();
   const imgRef = useRef<HTMLImageElement>(null);
 
   const onAddPlay = async () => {
-    const url = await video.getFile();
+    console.log(video);
+
     if (!_video.current) {
+      const data = await readBinaryFile(video.path);
+      const uniArr = new Uint8Array(data);
+      const videoBlob = new Blob([uniArr], { type: "video/mp4" });
       _video.current = {
-        name: formatName(video.name),
-        fileName: video.name,
-        url: URL.createObjectURL(url),
+        name: video.name,
+        formatName: video.formatName,
+        path: video.path,
+        url: URL.createObjectURL(videoBlob),
       };
     }
+    console.log(_video.current);
+
     addPlayList(_video.current);
   };
 
@@ -64,9 +73,19 @@ function MoviePost({
   useEffect(() => {
     async function setCover() {
       if (imgRef.current) {
-        const url = covers.get(formatName(video.name));
+        const url = covers.get(video.formatName);
         if (url) {
-          imgRef.current.src = url;
+          if (url.includes("blob")) {
+            imgRef.current.src = url;
+            return;
+          }
+          console.log("createUrl");
+          const data = await readBinaryFile(url);
+          const uniArr = new Uint8Array(data);
+          const imgBlob = new Blob([uniArr], { type: "image/jpg" });
+          const blobUrl = URL.createObjectURL(imgBlob);
+          covers.set(video.formatName, blobUrl);
+          imgRef.current.src = convertFileSrc(url);
         }
       }
     }

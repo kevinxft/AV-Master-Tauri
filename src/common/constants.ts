@@ -1,4 +1,5 @@
 export const _ALL_KEY = "all";
+export const _ALL_KEY_NAME = "全部";
 
 export const AV_MASTER_CONFIG_DIR = "__AV_MASTER_CONFIG__";
 export const AV_MASTER_COVERS_DIR = "__AV_MASTER_COVERS__";

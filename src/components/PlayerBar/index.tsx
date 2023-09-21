@@ -55,8 +55,8 @@ function PlayerBar() {
       >
         {playList.map((video) => (
           <div
-            key={video.fileName}
-            onClick={() => onRemove(video.fileName)}
+            key={video.name}
+            onClick={() => onRemove(video.name)}
             className="p-2 text-sm underline rounded-lg cursor-pointer"
           >
             {video.name}
