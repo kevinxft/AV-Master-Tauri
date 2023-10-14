@@ -1,12 +1,12 @@
 import { useState, VideoType } from "../../common/useState";
 import { useEffect, useRef } from "react";
-import { formatName, getPost } from "@/utils";
+import { formatName } from "@/utils";
 import StarButton from "@/components/StarButton";
-import AddButton from "@/components/AddButton";
-import { useDirectoryPicker } from "@/common/useDirectoryPicker";
 import { FiRefreshCw } from "react-icons/fi";
+import { invoke } from "@tauri-apps/api";
 import { readBinaryFile } from "@tauri-apps/api/fs";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
+import { AiFillPlayCircle } from "react-icons/ai";
 import "./index.css";
 
 function MoviePost({
@@ -16,58 +16,22 @@ function MoviePost({
   video: VideoType;
   mini?: boolean;
 }) {
-  const {
-    removePlayList,
-    addPlayList,
-    playList,
-    covers,
-    isFullCover,
-    refreshTag,
-    updateRefreshTag,
-  } = useState();
-  const { refreshCovers } = useDirectoryPicker();
+  const { playList, covers, isFullCover, refreshTag } = useState();
 
   const isInPlayList = playList.some((v) => v.name === video.name);
-  const _video = useRef<VideoType>();
   const imgRef = useRef<HTMLImageElement>(null);
 
-  const onAddPlay = async () => {
-    console.log(video);
-
-    if (!_video.current) {
-      const data = await readBinaryFile(video.path);
-      const uniArr = new Uint8Array(data);
-      const videoBlob = new Blob([uniArr], { type: "video/mp4" });
-      _video.current = {
-        name: video.name,
-        formatName: video.formatName,
-        path: video.path,
-        url: URL.createObjectURL(videoBlob),
-      };
-    }
-    console.log(_video.current);
-
-    addPlayList(_video.current);
-  };
-
-  const onRemove = () => {
-    removePlayList(video.name);
-  };
-
-  const onAddClick = async () => {
-    if (isInPlayList) {
-      await onRemove();
-      return;
-    }
-    await onAddPlay();
+  const onPlayVideo = () => {
+    console.log(video.path);
+    invoke("play", { path: video.path });
   };
 
   const onRefreshCover = async () => {
-    const isSuccess = await getPost(formatName(video.name));
-    if (isSuccess) {
-      await refreshCovers();
-      updateRefreshTag();
-    }
+    // const isSuccess = await getPost(formatName(video.name));
+    // if (isSuccess) {
+    //   await refreshCovers();
+    //   updateRefreshTag();
+    // }
   };
 
   useEffect(() => {
@@ -121,7 +85,9 @@ function MoviePost({
               <FiRefreshCw />
             </div>
             <div className="flex items-center gap-2 ml-auto text-3xl">
-              <AddButton isInPlayList={isInPlayList} onClick={onAddClick} />
+              <div onClick={onPlayVideo}>
+                <AiFillPlayCircle />
+              </div>
               <StarButton videoName={video.name} />
             </div>
           </div>

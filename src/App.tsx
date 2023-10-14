@@ -1,11 +1,10 @@
-import { useDirectoryPicker } from "./common/useDirectoryPicker";
 import MovieWall from "./components/MovieWall";
 import SiderBar from "./components/SiderBar";
-import PlayerBar from "./components/PlayerBar";
 import WelcomePanel from "@/components/WelcomePanel";
+import { useState } from "@/common/useState";
 
 function App() {
-  const { videos } = useDirectoryPicker();
+  const { videos } = useState();
   return (
     <>
       <div className="flex min-w-full min-h-screen bg-neutral-950 ">
@@ -18,7 +17,6 @@ function App() {
           </>
         )}
       </div>
-      <PlayerBar />
     </>
   );
 }

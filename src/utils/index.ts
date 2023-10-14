@@ -1,9 +1,7 @@
 import { LRUCache } from "./LRUCache";
-import { saveImage } from "@/common/useDirectoryPicker";
 export * from "./LRUCache";
 import { _ALL_KEY } from "@/common/constants";
 
-// const baseURL = "http://192.168.2.105:7771";
 const baseURL = "http://192.168.2.105:7777";
 const localStarsKey = "AV-MASTER-STARS";
 const localRecentKey = "AV-MASTER-RECENT";
@@ -132,5 +130,6 @@ export const downloadImage = async (code: string, url: string) => {
   if (data.size === 0) {
     return false;
   }
-  return await saveImage(ImageName, data);
+  return !!ImageName;
+  // return await saveImage(ImageName, data);
 };

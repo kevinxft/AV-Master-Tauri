@@ -12,7 +12,7 @@ import {
 } from "./constants";
 
 const dirs: dirType[] = [];
-const videosMap = new Map();
+export const videosMap = new Map();
 const allVideos: VideoType[] = [];
 
 const IGNORE = [
@@ -33,7 +33,7 @@ export const useDirectoryPicker = () => {
   const { setCovers, setVideos, setDirs, covers } = useState();
   let total = 0;
 
-  const openDir = async (dirPath = "/Volumes/WD/毛片2") => {
+  const openDir = async (dirPath = "") => {
     if (dirPath === "") {
       dirPath = (await open({
         directory: true,
@@ -52,7 +52,6 @@ export const useDirectoryPicker = () => {
       key: _ALL_KEY,
       count: total,
     });
-    console.log(allVideos.map((v) => v.formatName));
     setDirs(dirs);
     setVideos(allVideos);
     setCovers(covers);
@@ -67,7 +66,7 @@ export const useDirectoryPicker = () => {
           key: entry.name as string,
           count: entry.children.length,
         });
-        videosMap.set(entry.name, entry.children);
+        videosMap.set(entry.name, converFileType(entry.children));
         allVideos.push(...converFileType(entry.children));
         total += entry.children.length;
         await processEntries(entry.children);

@@ -27,7 +27,7 @@ export type FunctionType = {
 export type GroupType = {
   name: string;
   key: string;
-  files?: FileSystemFileHandle[];
+  files?: VideoType[];
 };
 
 export type VideoType = {
@@ -139,31 +139,40 @@ export const useState = create<StateType>((set) => ({
 }));
 
 export const filterVideos = (
-  videos: FileSystemFileHandle[],
+  videos: VideoType[],
   isAuto: boolean = false,
   group: GroupType[],
   groupKey: string,
   query: string,
-  dirs: Map<string, FileSystemFileHandle[]>,
-  dirName: string
+  dirs: Map<string, VideoType[]>,
+  dirName: string,
+  stars: string[]
 ) => {
   const result = isAuto
     ? filterByAuto(videos, group, groupKey, query)
-    : filterByDir(videos, dirs, dirName, query);
+    : filterByDir(videos, dirs, dirName, query, stars);
 
   return result;
 };
 
 const filterByDir = (
-  videos: FileSystemFileHandle[],
-  dirs: Map<string, FileSystemFileHandle[]>,
+  videos: VideoType[],
+  dirs: Map<string, VideoType[]>,
   dirName: string,
-  query: string
+  query: string,
+  stars: string[]
 ) => {
   const search = query.trim();
-  let result: FileSystemFileHandle[] = [];
+  let result: VideoType[] = [];
   if (dirName === _ALL_KEY) {
-    result = videos;
+    result = videos.reduce((acc, cur) => {
+      if (stars.includes(cur.name)) {
+        acc.unshift(cur);
+      } else {
+        acc.push(cur);
+      }
+      return acc;
+    }, [] as VideoType[]);
   } else {
     result = dirs.get(dirName) || [];
   }
@@ -172,17 +181,18 @@ const filterByDir = (
       video.name.toLowerCase().includes(search)
     );
   }
+  console.log(result);
   return result;
 };
 
 const filterByAuto = (
-  videos: FileSystemFileHandle[],
+  videos: VideoType[],
   group: GroupType[],
   groupKey: string,
   query: string
 ) => {
   const search = query.trim();
-  let result: FileSystemFileHandle[] = [];
+  let result: VideoType[] = [];
   if (groupKey === _ALL_KEY) {
     result = videos;
   } else {
