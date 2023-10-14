@@ -5,7 +5,7 @@ import { _ALL_KEY } from "@/common/constants";
 const LRU = new LRUCache(12);
 
 export type FunctionType = {
-  setVideos: (videos: FileSystemFileHandle[]) => void;
+  setVideos: (videos: VideoType[]) => void;
   setGroup: (group: GroupType[]) => void;
   search: (query: string) => void;
   filter: (groupKey: string) => void;
@@ -27,13 +27,14 @@ export type FunctionType = {
 export type GroupType = {
   name: string;
   key: string;
-  files?: FileSystemFileHandle[];
+  files?: VideoType[];
 };
 
 export type VideoType = {
-  fileName: string;
+  path: string;
+  formatName: string;
   name: string;
-  url: string;
+  url?: string;
 };
 
 export type dirType = {
@@ -43,7 +44,7 @@ export type dirType = {
 };
 
 export type ValueType = {
-  videos: FileSystemFileHandle[];
+  videos: VideoType[];
   group: GroupType[];
   dirs: dirType[];
   query: string;
@@ -90,14 +91,14 @@ export const useState = create<StateType>((set) => ({
   reset: (initState) => set(() => ({ ...initState })),
   addPlayList: (video) =>
     set((state) => {
-      if (state.playList.some((v) => v.fileName === video.fileName)) {
+      if (state.playList.some((v) => v.name === video.name)) {
         return {};
       }
       return { playList: [...state.playList, video] };
     }),
   removePlayList: (fileName) =>
     set((state) => ({
-      playList: state.playList.filter((item) => item.fileName !== fileName),
+      playList: state.playList.filter((item) => item.name !== fileName),
     })),
   setLoading: (isLoading) => set({ isLoading }),
   setModal: (modalVisible) => set({ modalVisible }),
@@ -119,7 +120,7 @@ export const useState = create<StateType>((set) => ({
         return { recent: [] };
       }
       state.playList.forEach((v) => {
-        LRU.set(v.fileName, v.name);
+        LRU.set(v.name, v.name);
       });
       const recent: string[] = LRU.toArray();
       setRecent(recent);
@@ -138,31 +139,40 @@ export const useState = create<StateType>((set) => ({
 }));
 
 export const filterVideos = (
-  videos: FileSystemFileHandle[],
+  videos: VideoType[],
   isAuto: boolean = false,
   group: GroupType[],
   groupKey: string,
   query: string,
-  dirs: Map<string, FileSystemFileHandle[]>,
-  dirName: string
+  dirs: Map<string, VideoType[]>,
+  dirName: string,
+  stars: string[]
 ) => {
   const result = isAuto
     ? filterByAuto(videos, group, groupKey, query)
-    : filterByDir(videos, dirs, dirName, query);
+    : filterByDir(videos, dirs, dirName, query, stars);
 
   return result;
 };
 
 const filterByDir = (
-  videos: FileSystemFileHandle[],
-  dirs: Map<string, FileSystemFileHandle[]>,
+  videos: VideoType[],
+  dirs: Map<string, VideoType[]>,
   dirName: string,
-  query: string
+  query: string,
+  stars: string[]
 ) => {
   const search = query.trim();
-  let result: FileSystemFileHandle[] = [];
+  let result: VideoType[] = [];
   if (dirName === _ALL_KEY) {
-    result = videos;
+    result = videos.reduce((acc, cur) => {
+      if (stars.includes(cur.name)) {
+        acc.unshift(cur);
+      } else {
+        acc.push(cur);
+      }
+      return acc;
+    }, [] as VideoType[]);
   } else {
     result = dirs.get(dirName) || [];
   }
@@ -171,17 +181,18 @@ const filterByDir = (
       video.name.toLowerCase().includes(search)
     );
   }
+  console.log(result);
   return result;
 };
 
 const filterByAuto = (
-  videos: FileSystemFileHandle[],
+  videos: VideoType[],
   group: GroupType[],
   groupKey: string,
   query: string
 ) => {
   const search = query.trim();
-  let result: FileSystemFileHandle[] = [];
+  let result: VideoType[] = [];
   if (groupKey === _ALL_KEY) {
     result = videos;
   } else {

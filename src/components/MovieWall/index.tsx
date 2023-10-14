@@ -1,35 +1,35 @@
 import { useState, filterVideos } from "../../common/useState";
-import { dirs } from "@/common/useDirectoryPicker";
 import MoviePost from "../MoviePost";
-import { useRef } from "react";
+import { videosMap } from "@/common/useFs";
 import { _ALL_KEY } from "@/common/constants";
 
 function MovieWall() {
   const {
     videos,
-    search,
-    filter,
+    // search,
+    // filter,
+    stars,
     group,
     query,
     groupKey,
     dirName,
     isFullCover,
   } = useState();
-  const inputRef: React.RefObject<HTMLInputElement> = useRef(null);
+  // const inputRef: React.RefObject<HTMLInputElement> = useRef(null);
 
-  const onSearch = () => {
-    if (inputRef.current) {
-      search(inputRef.current.value);
-    }
-  };
+  // const onSearch = () => {
+  //   if (inputRef.current) {
+  //     search(inputRef.current.value);
+  //   }
+  // };
 
-  const onReset = () => {
-    search("");
-    filter(_ALL_KEY);
-    if (inputRef.current) {
-      inputRef.current.value = "";
-    }
-  };
+  // const onReset = () => {
+  //   search("");
+  //   filter(_ALL_KEY);
+  //   if (inputRef.current) {
+  //     inputRef.current.value = "";
+  //   }
+  // };
 
   return (
     <div className="flex flex-col flex-1 max-h-screen overflow-hidden select-none">
@@ -37,7 +37,6 @@ function MovieWall() {
         {dirName === _ALL_KEY ? "全部作品" : dirName}
       </div>
       <div className="overflow-y-auto pb-[100px]">
-        {/* <div className="grid gap-4 p-4 min-[400px]:grid-cols-1 min-[800px]:grid-cols-2 min-[1200px]:grid-cols-3 min-[1600px]:grid-cols-4 min-[2000px]:grid-cols-5 min-[2400px]:grid-cols-6 min-[2800px]:grid-cols-7"> */}
         <div
           className={`grid gap-4 p-4 ${
             isFullCover
@@ -51,8 +50,9 @@ function MovieWall() {
             group,
             groupKey,
             query,
-            dirs,
-            dirName
+            videosMap,
+            dirName,
+            stars
           ).map((video) => (
             <MoviePost key={video.name} video={video} />
           ))}

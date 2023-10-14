@@ -1,72 +1,55 @@
 import { useState, VideoType } from "../../common/useState";
 import { useEffect, useRef } from "react";
-import { formatName, getPost } from "@/utils";
+import { formatName } from "@/utils";
 import StarButton from "@/components/StarButton";
-import AddButton from "@/components/AddButton";
-import { useDirectoryPicker } from "@/common/useDirectoryPicker";
 import { FiRefreshCw } from "react-icons/fi";
+import { invoke } from "@tauri-apps/api";
+import { readBinaryFile } from "@tauri-apps/api/fs";
+import { convertFileSrc } from "@tauri-apps/api/tauri";
+import { AiFillPlayCircle } from "react-icons/ai";
 import "./index.css";
 
 function MoviePost({
   video,
   mini = false,
 }: {
-  video: FileSystemFileHandle;
+  video: VideoType;
   mini?: boolean;
 }) {
-  const {
-    removePlayList,
-    addPlayList,
-    playList,
-    covers,
-    isFullCover,
-    refreshTag,
-    updateRefreshTag,
-  } = useState();
-  const { refreshCovers } = useDirectoryPicker();
+  const { playList, covers, isFullCover, refreshTag } = useState();
 
-  const isInPlayList = playList.some((v) => v.fileName === video.name);
-  const _video = useRef<VideoType>();
+  const isInPlayList = playList.some((v) => v.name === video.name);
   const imgRef = useRef<HTMLImageElement>(null);
 
-  const onAddPlay = async () => {
-    const url = await video.getFile();
-    if (!_video.current) {
-      _video.current = {
-        name: formatName(video.name),
-        fileName: video.name,
-        url: URL.createObjectURL(url),
-      };
-    }
-    addPlayList(_video.current);
-  };
-
-  const onRemove = () => {
-    removePlayList(video.name);
-  };
-
-  const onAddClick = async () => {
-    if (isInPlayList) {
-      await onRemove();
-      return;
-    }
-    await onAddPlay();
+  const onPlayVideo = () => {
+    console.log(video.path);
+    invoke("play", { path: video.path });
   };
 
   const onRefreshCover = async () => {
-    const isSuccess = await getPost(formatName(video.name));
-    if (isSuccess) {
-      await refreshCovers();
-      updateRefreshTag();
-    }
+    // const isSuccess = await getPost(formatName(video.name));
+    // if (isSuccess) {
+    //   await refreshCovers();
+    //   updateRefreshTag();
+    // }
   };
 
   useEffect(() => {
     async function setCover() {
       if (imgRef.current) {
-        const url = covers.get(formatName(video.name));
+        const url = covers.get(video.formatName);
         if (url) {
-          imgRef.current.src = url;
+          if (url.includes("blob")) {
+            imgRef.current.src = url;
+            return;
+          }
+          console.log("createUrl");
+          const data = await readBinaryFile(url);
+          const uniArr = new Uint8Array(data);
+          const imgBlob = new Blob([uniArr], { type: "image/jpg" });
+          const blobUrl = URL.createObjectURL(imgBlob);
+          covers.set(video.formatName, blobUrl);
+          imgRef.current.src = convertFileSrc(url);
         }
       }
     }
@@ -102,7 +85,9 @@ function MoviePost({
               <FiRefreshCw />
             </div>
             <div className="flex items-center gap-2 ml-auto text-3xl">
-              <AddButton isInPlayList={isInPlayList} onClick={onAddClick} />
+              <div onClick={onPlayVideo}>
+                <AiFillPlayCircle />
+              </div>
               <StarButton videoName={video.name} />
             </div>
           </div>
