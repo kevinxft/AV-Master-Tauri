@@ -27,11 +27,9 @@ function MoviePost({
   };
 
   const onRefreshCover = async () => {
-    // const isSuccess = await getPost(formatName(video.name));
-    // if (isSuccess) {
-    //   await refreshCovers();
-    //   updateRefreshTag();
-    // }
+    console.log(video);
+    const response = await invoke("get_cover", { code: video.formatName });
+    console.log(response);
   };
 
   useEffect(() => {

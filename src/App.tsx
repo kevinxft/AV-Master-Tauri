@@ -1,5 +1,5 @@
-import MovieWall from "./components/MovieWall";
-import SiderBar from "./components/SiderBar";
+import MovieWall from "@/components/MovieWall";
+import SiderBar from "@/components/SiderBar";
 import WelcomePanel from "@/components/WelcomePanel";
 import { useState } from "@/common/useState";
 

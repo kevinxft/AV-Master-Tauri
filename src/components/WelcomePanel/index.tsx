@@ -1,11 +1,15 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { useDirectoryPicker } from "@/common/useFs";
 import { db } from "@/common/db";
+import { useEffect } from "react";
 
 function WelcomePanel() {
   const { openDir } = useDirectoryPicker();
   const directories = useLiveQuery(() => db.directories.toArray());
   // /Volumes/WD/毛片2
+  useEffect(() => {
+    openDir("/Volumes/WD/毛片2");
+  }, [openDir]);
   return (
     <div className="flex flex-col items-center justify-center w-64 h-64 m-auto bg-cyan-500 rounded-3xl">
       <div>最近打开</div>
