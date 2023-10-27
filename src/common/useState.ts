@@ -5,6 +5,7 @@ import { _ALL_KEY } from "@/common/constants";
 const LRU = new LRUCache(12);
 
 export type FunctionType = {
+  setRootPath: (path: string) => void;
   setVideos: (videos: VideoType[]) => void;
   setGroup: (group: GroupType[]) => void;
   search: (query: string) => void;
@@ -44,6 +45,7 @@ export type dirType = {
 };
 
 export type ValueType = {
+  rootPath: string;
   videos: VideoType[];
   group: GroupType[];
   dirs: dirType[];
@@ -63,6 +65,7 @@ export type ValueType = {
 };
 
 export const initState = {
+  rootPath: "",
   videos: [],
   group: [],
   dirs: [],
@@ -136,30 +139,23 @@ export const useState = create<StateType>((set) => ({
   updateRefreshTag: () =>
     set((state) => ({ refreshTag: state.refreshTag + 1 })),
   setFullScreen: (isFullScreen) => set({ isFullScreen }),
+  setRootPath: (path) => set({ rootPath: path }),
 }));
 
 export const filterVideos = (
   videos: VideoType[],
-  isAuto: boolean = false,
-  group: GroupType[],
-  groupKey: string,
   query: string,
-  dirs: Map<string, VideoType[]>,
   dirName: string,
   stars: string[]
 ) => {
-  const result = isAuto
-    ? filterByAuto(videos, group, groupKey, query)
-    : filterByDir(videos, dirs, dirName, query, stars);
-
+  const result = filterByDir(videos, query, dirName, stars);
   return result;
 };
 
 const filterByDir = (
   videos: VideoType[],
-  dirs: Map<string, VideoType[]>,
-  dirName: string,
   query: string,
+  dirName: string,
   stars: string[]
 ) => {
   const search = query.trim();
@@ -174,7 +170,7 @@ const filterByDir = (
       return acc;
     }, [] as VideoType[]);
   } else {
-    result = dirs.get(dirName) || [];
+    result = videos.filter((video) => video.path.includes(dirName));
   }
   if (search) {
     result = result.filter((video) =>
@@ -182,26 +178,5 @@ const filterByDir = (
     );
   }
   console.log(result);
-  return result;
-};
-
-const filterByAuto = (
-  videos: VideoType[],
-  group: GroupType[],
-  groupKey: string,
-  query: string
-) => {
-  const search = query.trim();
-  let result: VideoType[] = [];
-  if (groupKey === _ALL_KEY) {
-    result = videos;
-  } else {
-    result = group.find((item) => item.key === groupKey)?.files || [];
-  }
-  if (search) {
-    result = result.filter((video) =>
-      video.name.toLowerCase().includes(search)
-    );
-  }
   return result;
 };
