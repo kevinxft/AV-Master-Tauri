@@ -1,8 +1,10 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-use reqwest::{header::USER_AGENT, Client, Proxy};
+
+use reqwest::{header::USER_AGENT, Client};
 use scraper::{Html, Selector};
-use serde::de::Error;
+use std::fs::File;
+use std::io::Write;
 use std::process::Command;
 use tauri::Manager;
 
@@ -16,7 +18,7 @@ fn main() {
             }
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![play, get_cover])
+        .invoke_handler(tauri::generate_handler![play, get_cover, download_img])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -39,16 +41,32 @@ async fn get_cover(code: &str) -> Result<String, String> {
         .or(Err("fetch error"))?;
 
     let body = response.text().await.or(Err("fetch error"))?;
-    let doc = Html::parse_fragment(&body);
     let selector = Selector::parse(".image").expect("sleector error");
-    let mut img = doc.select(&selector);
-    let src = img
+    let doc = Html::parse_fragment(&body);
+    let src = doc
+        .select(&selector)
         .next()
-        .expect("找不到封面")
+        .expect("fuck")
         .value()
         .attr("src")
-        .expect("找不到封面地址");
-    println!("{:?}", src);
+        .expect("can't find src");
 
     Ok(src.to_string())
+}
+
+#[tauri::command]
+async fn download_img(path: &str, code: &str, src: &str) -> Result<(), String> {
+    let data = reqwest::get(src)
+        .await
+        .expect("nothing")
+        .bytes()
+        .await
+        .expect("can't find the image");
+
+    let img_path = path.to_string() + &code.to_string() + ".jpg";
+    println!("{}", img_path);
+    let mut file = File::create(img_path).expect("write image fail");
+    file.write_all(&data).expect("write error");
+
+    Ok(())
 }

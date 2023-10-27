@@ -7,13 +7,14 @@ import {
   AV_MASTER_CONFIG_DIR,
   AV_MASTER_COVERS_DIR,
   AV_MASTER_USER_DATA,
+  COVERS_DIR_FULL_PATH,
   _ALL_KEY,
   _ALL_KEY_NAME,
 } from "./constants";
 
 const dirs: dirType[] = [];
-export const videosMap = new Map();
 const allVideos: VideoType[] = [];
+const covers = new Map();
 
 const IGNORE = [
   AV_MASTER_CONFIG_DIR,
@@ -30,7 +31,7 @@ const converFileType = (files: FileEntry[]) => {
 };
 
 export const useDirectoryPicker = () => {
-  const { setCovers, setVideos, setDirs, covers } = useState();
+  const { setCovers, setVideos, setDirs, setRootPath, rootPath } = useState();
   let total = 0;
 
   const openDir = async (dirPath = "") => {
@@ -42,6 +43,7 @@ export const useDirectoryPicker = () => {
     }
     console.log(dirPath);
     if (dirPath) {
+      setRootPath(dirPath);
       const entries = await readDir(dirPath as string, {
         recursive: true,
       });
@@ -54,8 +56,7 @@ export const useDirectoryPicker = () => {
     });
     setDirs(dirs);
     setVideos(allVideos);
-    setCovers(covers);
-    await initConfig(dirPath);
+    initConfig(dirPath);
   };
 
   async function processEntries(entries: FileEntry[]) {
@@ -66,7 +67,6 @@ export const useDirectoryPicker = () => {
           key: entry.name as string,
           count: entry.children.length,
         });
-        videosMap.set(entry.name, converFileType(entry.children));
         allVideos.push(...converFileType(entry.children));
         total += entry.children.length;
         await processEntries(entry.children);
@@ -81,20 +81,33 @@ export const useDirectoryPicker = () => {
     }
   }
 
-  function processCovers(entries: FileEntry[]) {
+  async function processCovers(entries: FileEntry[]) {
     for (const entry of entries) {
       if (entry.name) {
         covers.set(formatName(entry.name), entry.path);
       }
     }
+    setCovers(covers);
+  }
+
+  async function rescanCovers() {
+    const entries = await readDir(rootPath + COVERS_DIR_FULL_PATH, {
+      recursive: true,
+    });
+    console.log(entries);
+    await processCovers(entries);
   }
 
   return {
     openDir,
+    rescanCovers,
   };
 };
 
 export const initConfig = async (rootPath: string) => {
+  if (!rootPath) {
+    return;
+  }
   const configPath = `${rootPath}/${AV_MASTER_CONFIG_DIR}`;
   const coversPath = `${configPath}/${AV_MASTER_COVERS_DIR}`;
   const userDataPath = `${configPath}/${AV_MASTER_USER_DATA}`;
